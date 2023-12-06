@@ -163,7 +163,7 @@
     document.getElementById('botaoPesquisa').addEventListener('click', pesquisaEndereco)
 
     // Coordenadas iniciais
-    let initialCoords = [0, 0];
+    let initialCoords = [-18.93658, -48.27015];
     
     //EXIBIDORES DE ENDEREÇO POR CLIQUE
     const rua = document.getElementById('rua')
@@ -213,13 +213,6 @@
         estado.value = endereco.state
       }
 
-    //CARREGA O MAPA ASSIM QUE O USUÁRIO ACEITA EXPOR SUA GEOLOCALIZAÇÃO
-    navigator.geolocation.getCurrentPosition(function (position) {
-        console.log(position.coords.latitude, position.coords.longitude)
-        initialCoords = [position.coords.latitude, position.coords.longitude]
-        initMap()    
-    });
-
     async function pesquisaEndereco() {
 
       if (!ruaPesquisa.value) {
@@ -264,6 +257,8 @@
       console.log(argumento)
       L.marker(argumento).addTo(map);
     }
+
+    window.onload = initMap
   </script>
 </body>
 </html>
