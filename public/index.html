@@ -1,264 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Ubuntu:wght@300&display=swap" rel="stylesheet">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Leaflet Example</title>
-  <!-- Inclua o link para a biblioteca Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <!-- Adicione a folha de estilo CSS personalizada para o mapa -->
-  <style>
-    body {
-        background: linear-gradient(to top, #c471f5 0%, #fa71cd 100%);
-        height: 100vh;
-        padding: 20px;
-        margin: 0;
-    }
-    #map {
-      height: 400px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> MAPA POR CPF </title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <style>
+        body {
+            color: #333;
+            padding: 20px;
+            background-color: #f0f0f0;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+        }
 
-    .address-field {
-        height: 400px;
-         border: 1px solid black;
-    }
+        #map {
+            height: 700px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
 
-    .form-group {
-        display: flex;
-        flex-direction: column;
-    }
+        input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
 
-    input {
-        width: 800px;
-    }
-    
-    #container {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
+        .map-form {
+            max-width: 400px;
+            margin: 0 auto;
+        }
 
-    label, h1 { 
-        font-family: 'Ubuntu', sans-serif;  
-        color: white;
-    }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
 
-    img {
-      height: 150px;
-    }
+        button {
+            width: 100%;
+            height: 40px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 20px;
+        }
 
-    button {
-      cursor: pointer;
-      width: 300px;
-      color: white;
-      border: none;
-      outline: none;
-      background-color: purple;
-      padding: 10px;
-      border-radius: 4px;
-      margin: 20px;
-    }
-
-    button:hover {
-      background-color: pink;
-    }
-
-    button:focus {
-      background-color: blueviolet;
-    }
-  </style>
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
+
 <body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-  <div id="container">
+    <div class="map-form">
+        <div>
+            <label for="cep">CEP</label>
+            <input id="cep" name="cep" placeholder="Digite o CEP" />
+        </div>
+        <div>
+            <button id="botao">Pesquisar</button>
 
-
-    <img src="https://techers.com.br/wp-content/uploads/2023/05/logo.png">
-
-    <div id="address-field">
-      <h1>Pesquisa de Endereço</h1>
-      <div class="form-group">
-          <label>
-              Rua
-          </label>
-          <input id="ruaP">
-      </div>
-  
-      <div class="form-group">
-          <label>
-              Bairro
-          </label>
-          <input id="bairroP">
-      </div>
-  
-      <div class="form-group">
-          <label>
-              Cidade 
-          </label> 
-          <input id="cidadeP">
-      </div>
-  
-      <div class="form-group">
-          <label>
-              Estado
-          </label> 
-          <input id="estadoP"> 
-      </div>
-
-      <div class="form-group">
-        <button type="button" id="botaoPesquisa">Pesquisar</button>
+        </div>
     </div>
-    </div>
-
-    <!-- Div para conter o mapa -->
     <div id="map"></div>
 
-    <div id="address-field">
-      <h1>Endereço do Clique</h1>
-      <div class="form-group">
-          <label>
-              Rua
-          </label>
-          <input id="rua">
-      </div>
+    <script>
+        const inputCEP = document.getElementById('cep');
 
-      <div class="form-group">
-          <label>
-              Bairro
-          </label>
-          <input id="bairro">
-      </div>
+        let mapa = null;
 
-      <div class="form-group">
-          <label>
-              Cidade 
-          </label> 
-          <input id="cidade">
-      </div>
+        let coordenadasIniciais = [-23.66927, -46.46236];
 
-      <div class="form-group">
-          <label>
-              Estado
-          </label> 
-          <input id="estado"> 
-      </div>
-    </div>
-  
-  </div>
-  
+        document.getElementById('botao').addEventListener('click', pesquisarGeolocalizacaoComBaseNoCEP);
 
-  <!-- Inclua o link para o script da biblioteca Leaflet -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js"></script>
+        async function pesquisarGeolocalizacaoComBaseNoCEP() {
+            const cep = inputCEP.value.trim();
 
-  <!-- Seu script JavaScript -->
-  <script>
-    // API VIA CEP https://viacep.com.br/ws/09290110/json/
+            if (!cep) {
+                window.alert('Você precisa digitar o CEP');
+                return;
+            }
 
-    
-    document.getElementById('botaoPesquisa').addEventListener('click', pesquisaEndereco)
+            try {
+                const response = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
+                const endereco = response.data;
 
-    // Coordenadas iniciais
-    let initialCoords = [-18.93658, -48.27015];
-    
-    //EXIBIDORES DE ENDEREÇO POR CLIQUE
-    const rua = document.getElementById('rua')
-    const bairro = document.getElementById('bairro')
-    const cidade = document.getElementById('cidade')
-    const estado = document.getElementById('estado')
+                const campoDePesquisa = `${endereco.logradouro || ''}, ${endereco.bairro || ''}, ${endereco.localidade || ''}, ${endereco.uf || ''}, Brasil`;
 
-    //CAMPOS DE PESQUISA DE ENDEREÇO
-    const ruaPesquisa = document.getElementById('ruaP')
-    const bairroPesquisa = document.getElementById('bairroP')
-    const cidadePesquisa = document.getElementById('cidadeP')
-    const estadoPesquisa = document.getElementById('estadoP')
-    let map = null
+                const dadosDaPesquisa = await axios.get(`https://nominatim.openstreetmap.org/search.php?q=${campoDePesquisa}&format=jsonv2`);
+                const geolocalizacao = dadosDaPesquisa.data[0].boundingbox;
+                const coordenadasEndereco = [geolocalizacao[0], geolocalizacao[2]];
 
-    // Função de inicialização do mapa
-    function initMap() {
-      
+                coordenadasIniciais = coordenadasEndereco;
 
-      // Criação do mapa
-      map = L.map('map').setView(initialCoords, 18);
-      console.log(initialCoords)
-      adicionaMarcador({lat: initialCoords[0], lng: initialCoords[1]})
-      // Adiciona camada do mapa (usando OpenStreetMap como provedor)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(map);
+                removeMapa();
+                iniciarMapa();
+            } catch (error) {
+                console.error('Erro ao obter dados do CEP:', error);
+                window.alert('Erro ao obter dados do CEP. Verifique se o CEP é válido.');
+            }
+        }
 
-      // Adiciona manipulador de clique no mapa
-      map.on('click', onMapClick);
-    }
+        function removeMapa() {
+            mapa.off();
+            mapa.remove();
+            mapa = null;
+        }
 
-    // Função chamada quando o mapa é clicado
-    async function onMapClick(e) {
-        // Obtém as coordenadas do clique
-        console.log(e)
-        const clickedLatLng = e.latlng;
-        adicionaMarcador(clickedLatLng)
-    
-        // Exibe as coordenadas no console (você pode fazer o que quiser com essas coordenadas)
-        console.log(`Latitude: ${clickedLatLng.lat}, Longitude: ${clickedLatLng.lng}`);
-        
-        const dadosDoClique = await axios.get(`https://nominatim.openstreetmap.org/reverse.php?lat=${clickedLatLng.lat}&lon=${clickedLatLng.lng}&zoom=18&format=jsonv2`)
-        const endereco = dadosDoClique.data.address
-        rua.value = endereco.road
-        bairro.value = endereco.suburb
-        cidade.value = endereco.city
-        estado.value = endereco.state
-      }
+        function iniciarMapa() {
+            mapa = L.map('map').setView(coordenadasIniciais, 18);
+            adicionarPinNoMapaComBaseNumaGeolocalizacao({ lat: coordenadasIniciais[0], lng: coordenadasIniciais[1] });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(mapa);
+            mapa.on('click', aoClicarNoMapa);
+        }
 
-    async function pesquisaEndereco() {
+        function adicionarPinNoMapaComBaseNumaGeolocalizacao(coordenada) {
+            L.marker(coordenada).addTo(mapa);
+        }
 
-      if (!ruaPesquisa.value) {
-        window.alert('INSIRA NOME DA RUA')
-        return
-      }
+        function aoClicarNoMapa(eventoDeClique) {
+            const latitudeLongitude = eventoDeClique.latlng;
+            adicionarPinNoMapaComBaseNumaGeolocalizacao({ lat: latitudeLongitude.lat, lng: latitudeLongitude.lng });
+        }
 
-      if (!cidadePesquisa.value) {
-        window.alert('INSIRA NOME DA CIDADE')
-        return
-      }
-
-      if (!estadoPesquisa.value) {
-        window.alert('INSIRA NOME DO ESTADO')
-        return
-      }
-      
-      const campoDePesquisa = ruaPesquisa.value + ' ' + 
-      bairroPesquisa.value  + ' ' +  
-      cidadePesquisa.value  + ' ' +  
-      estadoPesquisa.value + ' Brasil'
-
-      const enderecoRetornado = await axios.get(`https://nominatim.openstreetmap.org/search.php?q=${campoDePesquisa}&format=jsonv2`)
-      coordenadasEnderecoRetornado = [parseFloat(enderecoRetornado.data[0].boundingbox[0], 0), parseFloat(enderecoRetornado.data[0].boundingbox[2], 0)]
-       
-     
-      //REINICIA O MAPA
-      initialCoords = coordenadasEnderecoRetornado
-      destroiMapa()
-      initMap()
-    }
-
-    function destroiMapa() {
-      map.off()
-      map.remove()
-      map = null
-    }
-
-    function adicionaMarcador(argumento) {
-      //O ARGUMENTO DEVE VIR COMO {lat: valor aleatorio, lng: valor aleatorio}
-      // Adiciona um marcador (PIN) na posição do clique
-      console.log(argumento)
-      L.marker(argumento).addTo(map);
-    }
-
-    window.onload = initMap
-  </script>
+        window.onload = iniciarMapa;
+    </script>
 </body>
+
 </html>
